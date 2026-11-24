@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EngageWatch · Student Engagement Classifier</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="brand-name">EngageWatch</div>
+        <div class="brand-sub">Student engagement ML pipeline</div>
+      </div>
+    </div>
+    <nav id="nav">
+      <button class="nav-item active" data-view="overview">Overview</button>
+      <button class="nav-item" data-view="predict">Predict</button>
+      <button class="nav-item" data-view="insights">Data insights</button>
+      <button class="nav-item" data-view="retrain">Upload &amp; retrain</button>
+      <button class="nav-item" data-view="evaluation">Evaluation</button>
+    </nav>
+    <div class="side-status">
+      <span class="dot" id="side-dot"></span>
+      <span id="side-status-text">Connecting…</span>
+    </div>
+    <a class="docs-link" href="/docs" target="_blank" rel="noopener">API docs (Swagger)</a>
+  </aside>
+
+  <main>
+    <!-- ============================== OVERVIEW ============================== -->
+    <section class="view active" id="view-overview">
+      <header class="page-head">
+        <h1>Model up-time and service status</h1>
+        <p>Live health of the deployed model. The page pings <code>/health</code> every 5 seconds.</p>
+      </header>
+
+      <div class="grid stats">
+        <div class="card stat">
+          <div class="stat-label">Status</div>
+          <div class="stat-value" id="ov-status"><span class="dot"></span> –</div>
+          <div class="stat-foot" id="ov-instance">instance –</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Up-time</div>
+          <div class="stat-value mono" id="ov-uptime">–</div>
+          <div class="stat-foot" id="ov-started">started –</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Availability (this session)</div>
+          <div class="stat-value" id="ov-availability">–</div>
+          <div class="stat-foot" id="ov-pings">0 health checks</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Model version</div>
+          <div class="stat-value" id="ov-version">–</div>
+          <div class="stat-foot" id="ov-trained">trained –</div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Health-check response time</h2>
+          <p class="muted">Round-trip time of each <code>/health</code> ping measured in your browser.</p>
+          <div class="chart-box"><canvas id="chart-health"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Serving statistics</h2>
+          <table class="kv">
+            <tr><th>Requests served</th><td id="ov-requests">–</td></tr>
+            <tr><th>Server errors</th><td id="ov-errors">–</td></tr>
+            <tr><th>Predictions served</th><td id="ov-pred-count">–</td></tr>
+            <tr><th>Prediction latency (avg / p50 / p95)</th><td id="ov-pred-latency">–</td></tr>
+            <tr><th>Memory in use</th><td id="ov-memory">–</td></tr>
+            <tr><th>CPU</th><td id="ov-cpu">–</td></tr>
+            <tr><th>Uploads waiting for retraining</th><td id="ov-pending">–</td></tr>
+            <tr><th>Retraining</th><td id="ov-retrain">–</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Live model</h2>
+        <p class="muted" id="ov-arch">–</p>
+        <div class="grid metrics" id="ov-metrics"></div>
+        <p class="muted small">Metrics on the held-out test set, recorded when this model version was saved.</p>
+      </div>
+    </section>
+
+    <!-- ============================== PREDICT ============================== -->
+    <section class="view" id="view-predict">
+      <header class="page-head">
+        <h1>Predict</h1>
+        <p>Upload one webcam frame of a student. The model returns one of six engagement states.</p>
+      </header>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>1. Choose an image</h2>
+          <label class="dropzone" id="dropzone">
+            <input type="file" id="predict-file" accept="image/*" hidden>
+            <img id="predict-preview" alt="" hidden>
+            <div id="dropzone-text">
+              <strong>Click to choose an image</strong>
+              <span>or drag and drop one here (JPG, PNG, WEBP)</span>
+            </div>
+          </label>
+          <div class="row">
+            <button class="btn primary" id="predict-btn" disabled>Predict</button>
+            <span class="muted" id="predict-filename"></span>
+          </div>
+          <h3>Or try a held-out test image</h3>
+          <p class="muted small">These images were never used for training. The true label is shown under each one.</p>
+          <div class="samples" id="samples"></div>
+        </div>
+
+        <div class="card" id="result-card">
+          <h2>2. Prediction</h2>
+          <div id="result-empty" class="empty">No prediction yet.</div>
+          <div id="result" hidden>
+            <div class="result-top">
+              <div>
+                <div class="result-label" id="res-label">–</div>
+                <div class="result-sub"><span class="badge" id="res-group">–</span>
+                  <span id="res-confidence"></span></div>
+              </div>
+              <div class="verdict" id="res-verdict" hidden></div>
+            </div>
+            <div class="chart-box short"><canvas id="chart-proba"></canvas></div>
+            <table class="kv compact">
+              <tr><th>Probability the student is engaged</th><td id="res-engaged">–</td></tr>
+              <tr><th>Model inference time</th><td id="res-ms">–</td></tr>
+              <tr><th>Model version · served by</th><td id="res-version">–</td></tr>
+            </table>
+            <div class="feedback" id="feedback-box">
+              <label for="feedback-label">Was this wrong? Record the correct class:</label>
+              <div class="row">
+                <select id="feedback-label"></select>
+                <button class="btn" id="feedback-btn">Save feedback</button>
+                <span class="muted" id="feedback-msg"></span>
+              </div>
+            </div>
+          </div>
+          <div class="alert error" id="predict-error" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== INSIGHTS ============================== -->
+    <section class="view" id="view-insights">
+      <header class="page-head">
+        <h1>Data insights</h1>
+        <p>What the dataset looks like, and what five measurable image features say about each engagement state.</p>
+      </header>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Class balance</h2>
+          <div class="chart-box"><canvas id="chart-classes"></canvas></div>
+          <p class="story" id="story-balance"></p>
+        </div>
+        <div class="card">
+          <h2>Average frame per class</h2>
+          <p class="muted">The pixel-wise mean of every image in a class. Sharp averages mean the pose is consistent;
+            blurry ones mean the head position varies.</p>
+          <div class="mean-images" id="mean-images"></div>
+          <p class="story" id="story-mean"></p>
+        </div>
+      </div>
+
+      <div id="feature-cards"></div>
+    </section>
+
+    <!-- ============================== RETRAIN ============================== -->
+    <section class="view" id="view-retrain">
+      <header class="page-head">
+        <h1>Upload data and retrain</h1>
+        <p>Upload new labelled images in bulk. They are saved to the database, preprocessed, and used to fine-tune the live model.</p>
+      </header>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>1. Upload labelled images</h2>
+          <label for="upload-label">Class of these images</label>
+          <select id="upload-label"></select>
+          <label for="upload-files">Images (select many) or a .zip</label>
+          <input type="file" id="upload-files" accept="image/*,.zip" multiple>
+          <p class="muted small">A .zip may contain one folder per class (<code>bored/</code>, <code>engaged/</code>, …);
+            the folder name is then used as the label.</p>
+          <div class="row">
+            <button class="btn primary" id="upload-btn" disabled>Upload to database</button>
+            <span class="muted" id="upload-count"></span>
+          </div>
+          <div class="alert" id="upload-result" hidden></div>
+
+          <h3>Upload database</h3>
+          <table class="table" id="uploads-table">
+            <thead><tr><th>Class</th><th class="num">Waiting</th><th class="num">Used in training</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>2. Trigger retraining</h2>
+          <p class="muted">Fine-tunes the current model on the waiting uploads plus a replay sample of the original
+            training data, then replaces the live model only if test accuracy holds.</p>
+          <div class="row">
+            <label class="inline" for="retrain-epochs">Epochs</label>
+            <input type="number" id="retrain-epochs" min="1" max="30" value="3">
+            <label class="inline check"><input type="checkbox" id="retrain-force"> retrain even with no new uploads</label>
+          </div>
+          <div class="row">
+            <button class="btn primary big" id="retrain-btn">Start retraining</button>
+            <span class="muted" id="retrain-hint"></span>
+          </div>
+
+          <div class="progress-wrap" id="retrain-progress-wrap" hidden>
+            <div class="progress-head"><span id="retrain-stage">–</span><span id="retrain-pct">0%</span></div>
+            <div class="progress"><div class="progress-bar" id="retrain-bar"></div></div>
+            <pre class="log" id="retrain-log"></pre>
+          </div>
+          <div class="alert" id="retrain-result" hidden></div>
+          <table class="table" id="retrain-compare" hidden>
+            <thead><tr><th>Test metric</th><th class="num">Before</th><th class="num">After</th><th class="num">Change</th></tr></thead>
+            <tbody></tbody>
+          </table>
+
+          <h3>Automatic triggers</h3>
+          <table class="kv compact" id="trigger-table"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Training run history</h2>
+        <div class="table-scroll">
+          <table class="table" id="history-table">
+            <thead><tr><th>Run</th><th>Started (UTC)</th><th>Trigger</th><th>Status</th><th class="num">New images</th>
+              <th class="num">Trained on</th><th class="num">Epochs</th><th class="num">Accuracy before</th>
+              <th class="num">Accuracy after</th><th>Outcome</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== EVALUATION ============================== -->
+    <section class="view" id="view-evaluation">
+      <header class="page-head">
+        <h1>Evaluation in production</h1>
+        <p>Score the live model on the held-out test set from inside the running service, and watch its behaviour on real requests.</p>
+      </header>
+
+      <div class="card">
+        <div class="row between">
+          <div>
+            <h2>Test-set evaluation</h2>
+            <p class="muted" id="eval-meta">–</p>
+          </div>
+          <button class="btn primary" id="eval-btn">Run evaluation now</button>
+        </div>
+        <div class="grid metrics" id="eval-metrics"></div>
+        <div class="grid two">
+          <div>
+            <h3>Confusion matrix</h3>
+            <p class="muted small">Rows are the true class, columns the predicted class.</p>
+            <div class="table-scroll"><table class="matrix" id="eval-matrix"></table></div>
+          </div>
+          <div>
+            <h3>Per-class precision, recall and F1</h3>
+            <div class="chart-box"><canvas id="chart-perclass"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Prediction confidence over time</h2>
+          <p class="muted">Confidence of the most recent predictions. A sustained drop below the dashed line is the drift
+            signal that recommends retraining.</p>
+          <div class="chart-box"><canvas id="chart-confidence"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Live traffic</h2>
+          <table class="kv compact">
+            <tr><th>Predictions logged</th><td id="mon-total">–</td></tr>
+            <tr><th>Mean recent confidence</th><td id="mon-conf">–</td></tr>
+            <tr><th>User feedback received</th><td id="mon-fb">–</td></tr>
+            <tr><th>Accuracy on feedback</th><td id="mon-fbacc">–</td></tr>
+          </table>
+          <div class="chart-box short"><canvas id="chart-dist"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent predictions</h2>
+        <div class="table-scroll">
+          <table class="table" id="recent-table">
+            <thead><tr><th>Time (UTC)</th><th>File</th><th>Predicted</th><th class="num">Confidence</th>
+              <th class="num">Inference</th><th>Feedback</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
