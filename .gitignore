@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Local runtime state
+data/raw/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/retrain_state.json
+data/*.tmp
+models/archive/
+models/*.tmp.h5
+
+# Load-test scratch files (reports and summaries are kept)
+load_tests/results/tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tooling
+.claude/
+
+data/train/
+data/test/
+data/retrain_pool/

@@ -1,0 +1,16 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+notebook
+docs
+load_tests
+scripts
+deploy
+data/raw
+data/*.db
+data/*.db-*
+data/retrain_state.json
+models/archive
+*.md
