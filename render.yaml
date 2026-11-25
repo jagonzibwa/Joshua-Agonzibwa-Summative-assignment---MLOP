@@ -1,0 +1,19 @@
+# Render blueprint (https://render.com/docs/blueprint-spec).
+# New > Blueprint > pick this repository. Render builds the Dockerfile.
+#
+# The service needs about 490 MB of memory to serve predictions and about 1.5 GB to
+# retrain, so the 512 MB "free" and "starter" plans are too small. Use
+# "standard" (2 GB), or deploy to Hugging Face Spaces instead (see README).
+services:
+  - type: web
+    name: engagewatch
+    runtime: docker
+    plan: standard
+    healthCheckPath: /health
+    envVars:
+      - key: TF_THREADS
+        value: "1"
+      - key: REPLAY_PER_CLASS
+        value: "60"
+      - key: RETRAIN_EPOCHS
+        value: "3"
