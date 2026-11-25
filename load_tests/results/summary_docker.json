@@ -1,0 +1,91 @@
+{
+  "mode": "docker",
+  "users": 100,
+  "spawn_rate": 20,
+  "run_time": "60s",
+  "machine": "Windows AMD64, 12 logical cores",
+  "date": "2026-11-24 23:21",
+  "runs": [
+    {
+      "replicas": 1,
+      "predict": {
+        "requests": 1407,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 26.8,
+        "avg_ms": 2236,
+        "median_ms": 2100,
+        "p90_ms": 3500,
+        "p95_ms": 5800,
+        "p99_ms": 7000,
+        "max_ms": 7029
+      },
+      "all": {
+        "requests": 1650,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 31.4,
+        "avg_ms": 2043,
+        "median_ms": 1900,
+        "p90_ms": 3200,
+        "p95_ms": 5500,
+        "p99_ms": 6900,
+        "max_ms": 7029
+      }
+    },
+    {
+      "replicas": 2,
+      "predict": {
+        "requests": 2382,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 39.6,
+        "avg_ms": 1214,
+        "median_ms": 1200,
+        "p90_ms": 2100,
+        "p95_ms": 2600,
+        "p99_ms": 3500,
+        "max_ms": 4116
+      },
+      "all": {
+        "requests": 2862,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 47.6,
+        "avg_ms": 1032,
+        "median_ms": 900,
+        "p90_ms": 2000,
+        "p95_ms": 2500,
+        "p99_ms": 3500,
+        "max_ms": 4116
+      }
+    },
+    {
+      "replicas": 4,
+      "predict": {
+        "requests": 3666,
+        "failures": 1,
+        "failure_pct": 0.03,
+        "rps": 62.7,
+        "avg_ms": 332,
+        "median_ms": 170,
+        "p90_ms": 680,
+        "p95_ms": 1000,
+        "p99_ms": 2600,
+        "max_ms": 3980
+      },
+      "all": {
+        "requests": 4384,
+        "failures": 1,
+        "failure_pct": 0.02,
+        "rps": 74.9,
+        "avg_ms": 287,
+        "median_ms": 130,
+        "p90_ms": 640,
+        "p95_ms": 900,
+        "p99_ms": 2600,
+        "max_ms": 3980
+      }
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "mode": "local",
+  "users": 100,
+  "spawn_rate": 20,
+  "run_time": "60s",
+  "machine": "Windows AMD64, 12 logical cores",
+  "date": "2026-11-16 12:04",
+  "runs": [
+    {
+      "replicas": 1,
+      "predict": {
+        "requests": 1113,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 18.1,
+        "avg_ms": 3777,
+        "median_ms": 3900,
+        "p90_ms": 4400,
+        "p95_ms": 4600,
+        "p99_ms": 4800,
+        "max_ms": 5552
+      },
+      "all": {
+        "requests": 1316,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 21.4,
+        "avg_ms": 3453,
+        "median_ms": 3800,
+        "p90_ms": 4300,
+        "p95_ms": 4600,
+        "p99_ms": 4800,
+        "max_ms": 5552
+      }
+    },
+    {
+      "replicas": 2,
+      "predict": {
+        "requests": 2007,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 33.2,
+        "avg_ms": 1659,
+        "median_ms": 1700,
+        "p90_ms": 2200,
+        "p95_ms": 2600,
+        "p99_ms": 2900,
+        "max_ms": 3237
+      },
+      "all": {
+        "requests": 2410,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 39.9,
+        "avg_ms": 1395,
+        "median_ms": 1700,
+        "p90_ms": 2100,
+        "p95_ms": 2500,
+        "p99_ms": 2900,
+        "max_ms": 3237
+      }
+    },
+    {
+      "replicas": 4,
+      "predict": {
+        "requests": 2998,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 50.5,
+        "avg_ms": 683,
+        "median_ms": 650,
+        "p90_ms": 1200,
+        "p95_ms": 1300,
+        "p99_ms": 1500,
+        "max_ms": 2116
+      },
+      "all": {
+        "requests": 3625,
+        "failures": 0,
+        "failure_pct": 0.0,
+        "rps": 61.1,
+        "avg_ms": 577,
+        "median_ms": 540,
+        "p90_ms": 1100,
+        "p95_ms": 1300,
+        "p99_ms": 1500,
+        "max_ms": 2116
+      }
+    }
+  ]
+}
