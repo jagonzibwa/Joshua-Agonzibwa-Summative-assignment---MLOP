@@ -7,7 +7,7 @@ Summative project for Machine Learning Pipeline, by Joshua Agonzibwa.
 | Deliverable | Link |
 |---|---|
 | Video demo (YouTube) | |
-| Live application |  (see [Deploying to the cloud](#deploying-to-the-cloud)) |
+| Live application | <https://engagewatch.lemonriver-1cb3c56a.francecentral.azurecontainerapps.io/>|
 | Notebook | [`notebook/student_engagement.ipynb`](notebook/student_engagement.ipynb) |
 | Model file | [`models/engagement_model.h5`](models/engagement_model.h5) |
 | API documentation | `/docs` on the running service (Swagger UI) |
@@ -253,15 +253,28 @@ curl -X POST http://localhost:8000/predict -F "file=@data/test/engaged/engaged_0
 
 ## Deploying to the cloud
 
-The service uses about 490 MB of memory to serve this model and about 1.5 GB during a retraining run (measured locally), which rules out 512 MB free tiers. Hugging Face Spaces gives 2 vCPUs and 16 GB of memory at no cost and runs Docker images, so it is the platform used here.
+The service uses about 490 MB of memory to serve this model and about 1.5 GB during a retraining run (measured locally), which rules out 512 MB free tiers. The live application runs on **Azure Container Apps** (region France Central, 1 vCPU, 2 GiB memory, one always-on replica), using the same `Dockerfile` as the local Docker setup.
 
-1. Push this repository to GitHub.
-2. On <https://huggingface.co/new-space> create a Space: SDK **Docker** (blank template), hardware **CPU basic**.
-3. In the Space's **Files** tab, upload the two files from [`deploy/huggingface/`](deploy/huggingface): `Dockerfile` and `README.md` (replacing the default README). The Dockerfile clones this GitHub repository during the build, so nothing else has to be uploaded.
-4. Wait for the build to finish. The application is then served at `https://<username>-<space-name>.hf.space`.
-5. After pushing new commits to GitHub, use **Settings > Factory rebuild** in the Space.
+```bash
+# One-time setup (Azure CLI, logged in with `az login`)
+az group create -n engagewatch-rg -l francecentral
+az acr create -g engagewatch-rg -n <registry> --sku Basic --admin-enabled true
+az containerapp env create -n engagewatch-env -g engagewatch-rg -l francecentral
 
-Storage on the free tier is not persistent: uploaded images and retrained models are reset when the Space restarts.
+# Build locally and push (Azure for Students subscriptions do not allow `az acr build`)
+docker build -t <registry>.azurecr.io/engagewatch:v1 .
+az acr login -n <registry>
+docker push <registry>.azurecr.io/engagewatch:v1
+
+# Run it with a public HTTPS URL
+az containerapp create -n engagewatch -g engagewatch-rg --environment engagewatch-env \
+  --image <registry>.azurecr.io/engagewatch:v1 --registry-server <registry>.azurecr.io \
+  --target-port 8000 --ingress external --cpu 1 --memory 2Gi --min-replicas 1 --max-replicas 1
+```
+
+To deploy a new version, push a new tag and run `az containerapp update -n engagewatch -g engagewatch-rg --image <registry>.azurecr.io/engagewatch:<tag>`. Container storage is not persistent: uploaded images and retrained models are reset when the container restarts.
+
+**Hugging Face alternative.** [`deploy/huggingface/`](deploy/huggingface) holds a Dockerfile and README for a Docker Space; the Dockerfile clones this repository at build time. Docker Spaces now require a paid Hugging Face plan.
 
 **Render alternative.** `render.yaml` is a blueprint that builds the same Dockerfile (New > Blueprint). It needs the 2 GB `standard` plan.
 
