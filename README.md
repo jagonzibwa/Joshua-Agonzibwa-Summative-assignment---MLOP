@@ -6,7 +6,7 @@ Summative project for Machine Learning Pipeline, by Joshua Agonzibwa.
 
 | Deliverable | Link |
 |---|---|
-| Video demo (YouTube) | |
+| Video demo (YouTube) | https://youtu.be/MUizKRbeTjM |
 | Live application | <https://engagewatch.lemonriver-1cb3c56a.francecentral.azurecontainerapps.io/>|
 | Notebook | [`notebook/student_engagement.ipynb`](notebook/student_engagement.ipynb) |
 | Model file | [`models/engagement_model.h5`](models/engagement_model.h5) |
